@@ -16,7 +16,6 @@ func readToken() {
 		panic(err)
 	}
 	serviceToken = string(b)
-	log.Print("Refreshing service account token")
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
