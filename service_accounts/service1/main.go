@@ -11,7 +11,7 @@ import (
 var serviceToken string
 
 func readToken() {
-	b, err := ioutil.ReadFile("/var/run/secrets/tokens/service1-token")
+	b, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
 	if err != nil {
 		panic(err)
 	}
