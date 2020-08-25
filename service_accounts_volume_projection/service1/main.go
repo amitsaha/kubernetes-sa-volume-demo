@@ -3,18 +3,24 @@ package main
 import (
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
-func handleIndex(w http.ResponseWriter, r *http.Request) {
-	// Read token and send it as a method to identify self
-	// to service 2
-	b, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+var serviceToken string
+
+func readToken() {
+	b, err := ioutil.ReadFile("/var/run/secrets/tokens/service1-token")
 	if err != nil {
 		panic(err)
 	}
-	saToken := string(b)
+	serviceToken = string(b)
+	log.Print("Reloaded service accont token")
+}
+
+func handleIndex(w http.ResponseWriter, r *http.Request) {
 
 	// Make a HTTP request to service2
 	serviceConnstring := os.Getenv("SERVICE2_CONNSTRING")
@@ -26,7 +32,8 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	req.Header.Add("X-Client-Id", saToken)
+	// Identity self to service 2 using service account token
+	req.Header.Add("X-Client-Id", serviceToken)
 	resp, err := client.Do(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -39,6 +46,19 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// Reload the service account token every 5 minutes
+	ticker := time.NewTicker(300 * time.Second)
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				readToken()
+			}
+		}
+	}()
 
 	http.HandleFunc("/", handleIndex)
 	listenAddr := os.Getenv("LISTEN_ADDR")
@@ -46,4 +66,9 @@ func main() {
 		panic("LISTEN_ADDR expected")
 	}
 	http.ListenAndServe(listenAddr, nil)
+
+	// Ideally, we would have a shutdown function to orchestrate the shutdown
+	// of the server and stop the ticker
+	ticker.Stop()
+	done <- true
 }

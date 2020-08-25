@@ -25,6 +25,14 @@ spec:
         app: service1
     spec:
       serviceAccount: service1
+      volumes:
+        - name: service1-token
+          projected:
+            sources:
+            - serviceAccountToken:
+                path: service1-token
+                expirationSeconds: 600
+                audience: service2
       containers:
       - name: app
         image: amitsaha/k8s-sa-volume-demo-service1:sa
@@ -35,3 +43,7 @@ spec:
           value: "http://app.service2.svc.cluster.local"
         ports:
         - containerPort: 8080
+        volumeMounts:
+          - mountPath: /var/run/secrets/tokens
+            name: service1-token
+

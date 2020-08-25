@@ -24,7 +24,8 @@ func verifyToken(clientId string) (bool, error) {
 	ctx := context.TODO()
 	tr := authv1.TokenReview{
 		Spec: authv1.TokenReviewSpec{
-			Token: clientId,
+			Token:     clientId,
+			Audiences: []string{"service2"},
 		},
 	}
 	result, err := clientset.AuthenticationV1().TokenReviews().Create(ctx, &tr, metav1.CreateOptions{})
