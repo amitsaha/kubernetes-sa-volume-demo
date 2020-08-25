@@ -46,6 +46,8 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// Read the token once at startup first
+	readToken()
 	// Reload the service account token every 5 minutes
 	ticker := time.NewTicker(300 * time.Second)
 	done := make(chan bool)
