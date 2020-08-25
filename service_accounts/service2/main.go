@@ -12,22 +12,26 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func verifyToken(clientId string) (bool, error) {
+var kClientset *kubernetes.Clientset
+
+func setup() {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		return false, err
+		panic(err)
 	}
-	clientset, err := kubernetes.NewForConfig(config)
+	kClientset, err = kubernetes.NewForConfig(config)
 	if err != nil {
-		return false, err
+		panic(err)
 	}
+}
+func verifyToken(clientId string) (bool, error) {
 	ctx := context.TODO()
 	tr := authv1.TokenReview{
 		Spec: authv1.TokenReviewSpec{
 			Token: clientId,
 		},
 	}
-	result, err := clientset.AuthenticationV1().TokenReviews().Create(ctx, &tr, metav1.CreateOptions{})
+	result, err := kClientset.AuthenticationV1().TokenReviews().Create(ctx, &tr, metav1.CreateOptions{})
 	if err != nil {
 		return false, err
 	}
@@ -60,6 +64,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	setup()
 
 	http.HandleFunc("/", handleIndex)
 	http.ListenAndServe(":8081", nil)

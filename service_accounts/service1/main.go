@@ -3,18 +3,23 @@ package main
 import (
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 )
 
-func handleIndex(w http.ResponseWriter, r *http.Request) {
-	// Read token and send it as a method to identify self
-	// to service 2
-	b, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+var serviceToken string
+
+func readToken() {
+	b, err := ioutil.ReadFile("/var/run/secrets/tokens/service1-token")
 	if err != nil {
 		panic(err)
 	}
-	saToken := string(b)
+	serviceToken = string(b)
+	log.Print("Refreshing service account token")
+}
+
+func handleIndex(w http.ResponseWriter, r *http.Request) {
 
 	// Make a HTTP request to service2
 	serviceConnstring := os.Getenv("SERVICE2_CONNSTRING")
@@ -26,19 +31,22 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	req.Header.Add("X-Client-Id", saToken)
+	// Identity self to service 2 using service account token
+	req.Header.Add("X-Client-Id", serviceToken)
 	resp, err := client.Do(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	} else {
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+		io.WriteString(w, string(body))
 	}
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
-	io.WriteString(w, string(body))
 }
 
 func main() {
-
+	// Read the token at startup
+	readToken()
 	http.HandleFunc("/", handleIndex)
 	listenAddr := os.Getenv("LISTEN_ADDR")
 	if len(listenAddr) == 0 {
