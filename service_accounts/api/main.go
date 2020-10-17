@@ -6,24 +6,22 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 var serviceToken string
 
 func readToken() {
-	b, err := ioutil.ReadFile("/var/run/secrets/tokens/service1-token")
+	b, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
 	if err != nil {
 		panic(err)
 	}
 	serviceToken = string(b)
-	log.Print("Refreshing service account token")
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
 
 	// Make a HTTP request to service2
-	serviceConnstring := os.Getenv("SERVICE2_CONNSTRING")
+	serviceConnstring := os.Getenv("SECRET_STORE_CONNSTRING")
 	if len(serviceConnstring) == 0 {
 		panic("SERVICE2_CONNSTRING expected")
 	}
@@ -46,31 +44,12 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Read the token once at startup first
+	// Read the token at startup
 	readToken()
-	// Reload the service account token every 5 minutes
-	ticker := time.NewTicker(300 * time.Second)
-	done := make(chan bool)
-	go func() {
-		for {
-			select {
-			case <-done:
-				return
-			case <-ticker.C:
-				readToken()
-			}
-		}
-	}()
-
 	http.HandleFunc("/", handleIndex)
 	listenAddr := os.Getenv("LISTEN_ADDR")
 	if len(listenAddr) == 0 {
 		panic("LISTEN_ADDR expected")
 	}
 	http.ListenAndServe(listenAddr, nil)
-
-	// Ideally, we would have a shutdown function to orchestrate the shutdown
-	// of the server and stop the ticker
-	ticker.Stop()
-	done <- true
 }

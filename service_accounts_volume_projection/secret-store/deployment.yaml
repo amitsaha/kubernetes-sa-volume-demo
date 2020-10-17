@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: service2
+  name: secret-store
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: service2
-  namespace: service2
+  name: secret-store
+  namespace: secret-store
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -19,28 +19,28 @@ roleRef:
   name: system:auth-delegator
 subjects:
 - kind: ServiceAccount
-  name: service2
-  namespace: service2
+  name: secret-store
+  namespace: secret-store
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
-  namespace: service2
+  namespace: secret-store
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: service2
+      app: secret-store
   template:
     metadata:
       labels:
-        app: service2
+        app: secret-store
     spec:
-      serviceAccount: service2
+      serviceAccount: secret-store
       containers:
       - name: app
-        image: amitsaha/k8s-sa-volume-demo-service2:sa
+        image: amitsaha/k8s-sa-volume-demo-secret-store:sa
         env:
         - name: LISTEN_ADDR
           value: ":8081"
@@ -51,10 +51,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: app 
-  namespace: service2
+  namespace: secret-store
 spec:
   selector:
-    app: service2
+    app: secret-store
   ports:
     - protocol: TCP
       port: 80

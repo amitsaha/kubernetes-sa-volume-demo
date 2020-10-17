@@ -1,49 +1,49 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: service1
+  name: api
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: service1
-  namespace: service1
+  name: api
+  namespace: api
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
-  namespace: service1
+  namespace: api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: service1
+      app: api
   template:
     metadata:
       labels:
-        app: service1
+        app: api
     spec:
-      serviceAccount: service1
+      serviceAccount: api
       volumes:
-        - name: service1-token
+        - name: api-token
           projected:
             sources:
             - serviceAccountToken:
-                path: service1-token
+                path: api-token
                 expirationSeconds: 600
-                audience: service2
+                audience: secret-store
       containers:
       - name: app
-        image: amitsaha/k8s-sa-volume-demo-service1:sa
+        image: amitsaha/k8s-sa-volume-demo-api:sa
         env:
         - name: LISTEN_ADDR
           value: ":8080"
-        - name: SERVICE2_CONNSTRING
-          value: "http://app.service2.svc.cluster.local"
+        - name: SECRET_STORE_CONNSTRING
+          value: "http://app.secret-store.svc.cluster.local"
         ports:
         - containerPort: 8080
         volumeMounts:
           - mountPath: /var/run/secrets/tokens
-            name: service1-token
+            name: api-token
 

@@ -24,19 +24,21 @@ func setup() {
 		panic(err)
 	}
 }
+
 func verifyToken(clientId string) (bool, error) {
 	ctx := context.TODO()
 	tr := authv1.TokenReview{
 		Spec: authv1.TokenReviewSpec{
-			Token: clientId,
+			Token:     clientId,
+			Audiences: []string{"secret-store"},
 		},
 	}
 	result, err := kClientset.AuthenticationV1().TokenReviews().Create(ctx, &tr, metav1.CreateOptions{})
 	if err != nil {
 		return false, err
 	}
-
 	log.Printf("%#v\n", result.Status)
+
 	if result.Status.Authenticated {
 		return true, nil
 	}
@@ -60,7 +62,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid token", http.StatusForbidden)
 		return
 	}
-	io.WriteString(w, "Hello from service2. You have been authenticated")
+	io.WriteString(w, "Hello from secret-store. You have been authenticated")
 }
 
 func main() {
