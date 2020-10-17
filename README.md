@@ -1,1 +1,3 @@
-# kubernetes-sa-volume-demo
+# Demo of using Kubernetes Service Account Volume Projection
+
+This is a demo of ...
