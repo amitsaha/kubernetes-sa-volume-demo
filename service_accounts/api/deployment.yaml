@@ -27,7 +27,7 @@ spec:
       serviceAccount: api
       containers:
       - name: app
-        image: amitsaha/k8s-sa-volume-demo-api:sa
+        image: amitsaha/k8s-sa-volume-demo-api:sa-1
         env:
         - name: LISTEN_ADDR
           value: ":8080"
