@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t amitsaha/k8s-sa-volume-demo-secret-store:sa .
+docker build -t amitsaha/k8s-sa-volume-demo-ss:sa-2 .
