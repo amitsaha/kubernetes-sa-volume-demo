@@ -26,9 +26,9 @@ jobs:
       - name: Build service accounts API docker image
         run: |
            cd service_accounts/api
-           docker build
+           ./build_api.sh
 
       - name: Build service accounts secret store docker image
         run: |
            cd service_accounts/secret-store
-           docker build
+           ./build_ss.sh
