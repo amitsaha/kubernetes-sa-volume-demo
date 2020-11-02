@@ -9,6 +9,9 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  schedule:
+    # At 04:05 on Tuesday (UTC)
+    - cron:  '5 4 * * 2'
 
 jobs:
   build-push-docker-image:
