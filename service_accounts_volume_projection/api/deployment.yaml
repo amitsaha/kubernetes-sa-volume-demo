@@ -46,4 +46,16 @@ spec:
         volumeMounts:
           - mountPath: /var/run/secrets/tokens
             name: api-token
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  namespace: api
+spec:
+  type: NodePort
+  selector:
+    app: api
+  ports:
+    - port: 8080
+      targetPort: 8080
