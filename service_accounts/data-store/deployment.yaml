@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: secret-store
+  name: data-store
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: secret-store
-  namespace: secret-store
+  name: data-store
+  namespace: data-store
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -19,25 +19,25 @@ roleRef:
   name: system:auth-delegator
 subjects:
 - kind: ServiceAccount
-  name: secret-store
-  namespace: secret-store
+  name: data-store
+  namespace: data-store
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
-  namespace: secret-store
+  namespace: data-store
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: secret-store
+      app: data-store
   template:
     metadata:
       labels:
-        app: secret-store
+        app: data-store
     spec:
-      serviceAccount: secret-store
+      serviceAccount: data-store
       containers:
       - name: app
         image: amitsaha/k8s-sa-volume-demo-ss:sa-1
@@ -51,10 +51,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: app 
-  namespace: secret-store
+  namespace: data-store
 spec:
   selector:
-    app: secret-store
+    app: data-store
   ports:
     - protocol: TCP
       port: 80

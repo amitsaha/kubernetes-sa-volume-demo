@@ -25,13 +25,25 @@ spec:
         app: api
     spec:
       serviceAccount: api
+      volumes:
+        - name: api-token
+          projected:
+            sources:
+            - serviceAccountToken:
+                path: api-token
+                expirationSeconds: 600
+                audience: secret-store
       containers:
       - name: app
-        image: amitsaha/k8s-sa-volume-demo-api:sa-1
+        image: amitsaha/k8s-sa-volume-demo-api:sa-2
         env:
         - name: LISTEN_ADDR
           value: ":8080"
-        - name: DATA_STORE_CONNSTRING
-          value: "http://app.data-store.svc.cluster.local"
+        - name: SECRET_STORE_CONNSTRING
+          value: "http://app.secret-store.svc.cluster.local"
         ports:
         - containerPort: 8080
+        volumeMounts:
+          - mountPath: /var/run/secrets/tokens
+            name: api-token
+

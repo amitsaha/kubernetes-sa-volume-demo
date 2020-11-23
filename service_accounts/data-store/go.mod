@@ -1,4 +1,4 @@
-module github.com/amitsaha/kubernetes-sa-volume-demo/service_accounts/secret-store
+module github.com/amitsaha/kubernetes-sa-volume-demo/service_accounts/data-store
 
 go 1.15
 

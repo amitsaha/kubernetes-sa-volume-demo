@@ -60,7 +60,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid token", http.StatusForbidden)
 		return
 	}
-	io.WriteString(w, "Hello from secret store. You have been authenticated")
+	io.WriteString(w, "Hello from data store. You have been authenticated")
 }
 
 func main() {
