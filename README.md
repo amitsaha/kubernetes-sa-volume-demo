@@ -1,4 +1,4 @@
-# Demo of using Kubernetes Service Account Volume Projection
+# Microservice Authentication using Kubernetes Service Account Volume Projection
 
 ![CI](https://github.com/amitsaha/kubernetes-sa-volume-demo/workflows/CI/badge.svg?branch=master) ![CodeQL](https://github.com/amitsaha/kubernetes-sa-volume-demo/workflows/CodeQL/badge.svg)
 
