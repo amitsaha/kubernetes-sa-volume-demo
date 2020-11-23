@@ -24,9 +24,9 @@ jobs:
            cd service_accounts/api
            ./build_api.sh
 
-      - name: Build service accounts secret store docker image
+      - name: Build service accounts data store docker image
         run: |
-           cd service_accounts/secret-store
+           cd service_accounts/data-store
            ./build_ss.sh
 
       - name: Build service accounts volume projection API docker image
@@ -34,9 +34,9 @@ jobs:
            cd service_accounts_volume_projection/api
            ./build_api.sh
 
-      - name: Build service accounts volume projection secret store docker image
+      - name: Build service accounts volume projection data store docker image
         run: |
-           cd service_accounts_volume_projection/secret-store
+           cd service_accounts_volume_projection/data-store
            ./build_ss.sh
 
       - name: Push docker images

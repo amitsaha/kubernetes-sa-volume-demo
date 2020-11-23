@@ -22,10 +22,10 @@ func readToken() {
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
 
-	// Make a HTTP request to secret store
-	serviceConnstring := os.Getenv("SECRET_STORE_CONNSTRING")
+	// Make a HTTP request to service2
+	serviceConnstring := os.Getenv("DATA_STORE_CONNSTRING")
 	if len(serviceConnstring) == 0 {
-		panic("SECRET_STORE_CONNSTRING expected")
+		panic("DATA_STORE_CONNSTRING expected")
 	}
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", serviceConnstring, nil)

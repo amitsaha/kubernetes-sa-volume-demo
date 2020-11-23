@@ -1,76 +1,73 @@
 package main
 
 import (
+	"context"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
-	"time"
+
+	authv1 "k8s.io/api/authentication/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
-var serviceToken string
+var kClientset *kubernetes.Clientset
 
-func readToken() {
-	b, err := ioutil.ReadFile("/var/run/secrets/tokens/api-token")
+func setup() {
+	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err)
 	}
-	serviceToken = string(b)
-	log.Print("Refreshing service account token")
+	kClientset, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func verifyToken(clientId string) (bool, error) {
+	ctx := context.TODO()
+	tr := authv1.TokenReview{
+		Spec: authv1.TokenReviewSpec{
+			Token:     clientId,
+			Audiences: []string{"data-store"},
+		},
+	}
+	result, err := kClientset.AuthenticationV1().TokenReviews().Create(ctx, &tr, metav1.CreateOptions{})
+	if err != nil {
+		return false, err
+	}
+	log.Printf("%#v\n", result.Status)
+
+	if result.Status.Authenticated {
+		return true, nil
+	}
+	return false, nil
+
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
-
-	// Make a HTTP request to secret store
-	serviceConnstring := os.Getenv("SECRET_STORE_CONNSTRING")
-	if len(serviceConnstring) == 0 {
-		panic("SECRET_STORE_CONNSTRING expected")
+	// Read the value of the client identifier from the request header
+	clientId := r.Header.Get("X-Client-Id")
+	if len(clientId) == 0 {
+		http.Error(w, "X-Client-Id not supplied", http.StatusUnauthorized)
+		return
 	}
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", serviceConnstring, nil)
-	if err != nil {
-		panic(err)
-	}
-	// Identity self to service 2 using service account token
-	req.Header.Add("X-Client-Id", serviceToken)
-	resp, err := client.Do(req)
+	authenticated, err := verifyToken(clientId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	} else {
-		defer resp.Body.Close()
-		body, _ := ioutil.ReadAll(resp.Body)
-		io.WriteString(w, string(body))
 	}
+	if !authenticated {
+		http.Error(w, "Invalid token", http.StatusForbidden)
+		return
+	}
+	io.WriteString(w, "Hello from data-store. You have been authenticated")
 }
 
 func main() {
-	// Read the token once at startup first
-	readToken()
-	// Reload the service account token every 5 minutes
-	ticker := time.NewTicker(300 * time.Second)
-	done := make(chan bool)
-	go func() {
-		for {
-			select {
-			case <-done:
-				return
-			case <-ticker.C:
-				readToken()
-			}
-		}
-	}()
+	setup()
 
 	http.HandleFunc("/", handleIndex)
-	listenAddr := os.Getenv("LISTEN_ADDR")
-	if len(listenAddr) == 0 {
-		panic("LISTEN_ADDR expected")
-	}
-	http.ListenAndServe(listenAddr, nil)
-
-	// Ideally, we would have a shutdown function to orchestrate the shutdown
-	// of the server and stop the ticker
-	ticker.Stop()
-	done <- true
+	http.ListenAndServe(":8081", nil)
 }

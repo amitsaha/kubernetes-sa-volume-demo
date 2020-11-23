@@ -32,15 +32,15 @@ spec:
             - serviceAccountToken:
                 path: api-token
                 expirationSeconds: 600
-                audience: secret-store
+                audience: data-store
       containers:
       - name: app
         image: amitsaha/k8s-sa-volume-demo-api:sa-2
         env:
         - name: LISTEN_ADDR
           value: ":8080"
-        - name: SECRET_STORE_CONNSTRING
-          value: "http://app.secret-store.svc.cluster.local"
+        - name: DATA_STORE_CONNSTRING
+          value: "http://app.data-store.svc.cluster.local"
         ports:
         - containerPort: 8080
         volumeMounts:
