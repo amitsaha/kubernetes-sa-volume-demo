@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -13,6 +14,12 @@ import (
 )
 
 var kClientset *kubernetes.Clientset
+
+// https://stackoverflow.com/a/51270134
+func prettyPrint(i interface{}) string {
+	s, _ := json.MarshalIndent(i, "", "\t")
+	return string(s)
+}
 
 func setup() {
 	config, err := rest.InClusterConfig()
@@ -36,7 +43,7 @@ func verifyToken(clientId string) (bool, error) {
 		return false, err
 	}
 
-	log.Printf("%#v\n", result.Status)
+	log.Printf("%v\n", prettyPrint(result.Status))
 	if result.Status.Authenticated {
 		return true, nil
 	}
